@@ -69,6 +69,7 @@ TEMPLATES = [
         },
     },
 ]
+
 ASGI_APPLICATION = "chatserver.asgi.application"
 
 CHANNEL_LAYERS = {
@@ -97,6 +98,7 @@ DATABASES = {
     }
 }
 
+AUTH_USER_MODEL = 'account.CustomUser'
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

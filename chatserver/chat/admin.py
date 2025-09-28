@@ -12,3 +12,4 @@ class RoomsAdmin(ModelAdmin):
 @admin.register(Message)
 class MessagesAdmin(ModelAdmin):
     pass
+
