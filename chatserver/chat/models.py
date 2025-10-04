@@ -19,7 +19,7 @@ class Message(models.Model):
 class Post(models.Model):
     text = models.TextField()
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='uploads/')
+    image = models.ImageField(upload_to='uploads/', blank=True)
 
     likes = models.ManyToManyField(settings.AUTH_USER_MODEL,
                                    related_name='liked_posts',
@@ -36,5 +36,5 @@ class Post(models.Model):
 class Comment(models.Model):
     com = models.CharField(max_length=512)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='user_comments')
-    post = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='comments')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
     created_at = models.DateTimeField(auto_now_add=True)
