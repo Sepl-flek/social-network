@@ -1,7 +1,9 @@
 from django.db.models import Q
 from django.shortcuts import render
-from rest_framework import permissions
+from rest_framework import permissions, status
+from rest_framework.decorators import action
 from rest_framework.generics import ListAPIView
+from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from api.serializers import RoomSerializer, MessageSerializer, PostSerializer, CommentSerializer
@@ -42,6 +44,22 @@ class PostViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def like(self, request, pk=None):
+        post = self.get_object()
+        if request.user in post.likes.all():
+            return Response({'detail': 'Уже лайкнуто'}, status=status.HTTP_400_BAD_REQUEST)
+        post.likes.add(request.user)
+        return Response({'detail': 'Лайк поставлен'}, status=status.HTTP_201_CREATED)
+
+    @like.mapping.delete
+    def unlike(self, request, pk=None):
+        post = self.get_object()
+        if request.user not in post.likes.all():
+            return Response({'detail': 'Вы не ставили сюда лайк'}, status=status.HTTP_400_BAD_REQUEST)
+        post.likes.remove(request.user)
+        return Response({'detail': 'Лайк убран'}, status.HTTP_204_NO_CONTENT)
 
 
 class UserCommentViewSet(ModelViewSet):

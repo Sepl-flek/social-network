@@ -32,4 +32,4 @@ def login_view(request):
 
 
 def home(request):
-    return HttpResponse("Дом")
+    return HttpResponse(f"{request.user.username}")
