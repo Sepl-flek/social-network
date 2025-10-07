@@ -16,6 +16,17 @@ class UserSimpleSerializer(ModelSerializer):
         fields = ('id', 'username')
 
 
+class UserDetailSerializer(ModelSerializer):
+    friends = UserSimpleSerializer(many=True)
+    followers = UserSimpleSerializer(many=True)
+    friend_requests = UserSimpleSerializer(many=True)
+
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'friends', 'followers', 'friend_requests')
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class RoomSerializer(ModelSerializer):
     owner = CustomUserSerializer()
     users = CustomUserSerializer(many=True)
@@ -25,6 +36,7 @@ class RoomSerializer(ModelSerializer):
         fields = ('name', 'owner', 'created_at', 'users')
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class MessageSerializer(ModelSerializer):
     author = CustomUserSerializer()
 
@@ -39,7 +51,7 @@ class CommentSerializer(ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ('id','post_id', 'com', 'author', 'created_at')
+        fields = ('id', 'post_id', 'com', 'author', 'created_at')
 
 
 class PostSerializer(ModelSerializer):
