@@ -81,7 +81,7 @@ class UserViewSet(ReadOnlyModelViewSet):
     serializer_class = UserDetailSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    @decorators.action(detail=True, methods=['get', 'post'], permission_classes=[permissions.IsAuthenticated])
+    @decorators.action(detail=True, methods=['get', 'post', 'delete'], permission_classes=[permissions.IsAuthenticated])
     def friends(self, request, pk=None):
         target_user = self.get_object()
         current_user = request.user
@@ -135,12 +135,13 @@ class UserViewSet(ReadOnlyModelViewSet):
                                 status=status.HTTP_400_BAD_REQUEST)
 
             if current_user in target_user.followers.all() or current_user in target_user.friend_requests.all():
-                target_user.followers.remove(current_user)
-                return Response({'detail': 'Вы уже отправляли заявку'}, status=status.HTTP_200_OK)
+                return Response({'detail': 'Вы уже отправляли заявку'},
+                                status=status.HTTP_400_BAD_REQUEST)
 
             # Если пользователь уже отправлял нам заявку => мы его добавляем в друзья
             if target_user in current_user.followers.all() or target_user in current_user.friend_requests.all():
                 current_user.followers.remove(target_user)
+                current_user.friend_requests.remove(target_user)
                 current_user.friends.add(target_user)
                 target_user.friends.add(current_user)
                 return Response({'detail': 'Пользователь вам уже отправлял запрос на дружбу. Вы добавили его в друзья'},
