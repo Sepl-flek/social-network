@@ -77,11 +77,11 @@ class UserCommentViewSet(ModelViewSet):
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class UserViewSet(ReadOnlyModelViewSet):
-    queryset = CustomUser.objects.all().prefetch_related('friends', 'followers')
+    queryset = CustomUser.objects.all().prefetch_related('friends', 'followers', 'friend_requests')
     serializer_class = UserDetailSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    @decorators.action(detail=True, methods=['get', 'post'])
+    @decorators.action(detail=True, methods=['get', 'post'], permission_classes=[permissions.IsAuthenticated])
     def friends(self, request, pk=None):
         target_user = self.get_object()
         current_user = request.user
@@ -90,42 +90,80 @@ class UserViewSet(ReadOnlyModelViewSet):
         if request.method == 'GET':
             serializer = UserSimpleSerializer(target_user.friends.all(), many=True)
             return Response(serializer.data)
-        # POST
-        if target_user == current_user:
-            return Response({'detail': 'Нельзя добавить в друзья самого себя'},
-                            status=status.HTTP_400_BAD_REQUEST)
 
-        # Удалить из друзей (Переместить в подписчики)
-        if current_user in target_user.friends.all():
-            target_user.friends.remove(current_user)
-            current_user.friends.remove(target_user)
-            current_user.followers.add(target_user)
+        elif request.method == 'POST':
 
+            if target_user == current_user:
+                return Response({'detail': 'Нельзя добавить в друзья самого себя'},
+                                status=status.HTTP_400_BAD_REQUEST)
 
-    #todo: reorgonize from follows to friends_request
+            if current_user in target_user.friends.all():
+                return Response({'detail': 'Вы уже в друзьях'}, status=status.HTTP_400_BAD_REQUEST)
 
-    @decorators.action(detail=True, methods=['get', 'post'])
-    def followers(self, request, pk=None):
+            if target_user in current_user.friend_requests.all() or target_user in current_user.followers.all():
+                target_user.friends.add(current_user)
+                if target_user in current_user.followers.all():
+                    current_user.followers.remove(target_user)
+                else:
+                    current_user.friend_requests.remove(target_user)
+                return Response({'detail': 'Вы добавили в друзья'}, status=status.HTTP_201_CREATED)
+
+            else:
+                return Response({'detail': 'Вы не может сделать этого'}, status=status.HTTP_400_BAD_REQUEST)
+
+        elif request.method == 'DELETE':
+
+            # Удалить из друзей (Переместить в подписчики)
+            if current_user in target_user.friends.all():
+                target_user.friends.remove(current_user)
+                current_user.friends.remove(target_user)
+                current_user.followers.add(target_user)
+                return Response({'detail': f'Вы удалили из друзей {target_user}'}, status=status.HTTP_204_NO_CONTENT)
+
+    @decorators.action(detail=True, methods=['post', 'delete'], permission_classes=[permissions.IsAuthenticated])
+    def friend_request(self, request, pk=None):
         target_user = self.get_object()
         current_user = request.user
 
-        # GET
-        if request.method == 'GET':
-            serializer = UserSimpleSerializer(target_user.followers.all(), many=True)
-            return Response(serializer.data)
+        if request.method == 'POST':
+            if target_user == current_user:
+                return Response({'detail': 'Нельзя кинуть заявку самому себе'},
+                                status=status.HTTP_400_BAD_REQUEST)
 
-        # POST
-        if target_user == current_user:
-            return Response({'detail': 'Нельзя подписаться на самого себя'},
-                            status=status.HTTP_400_BAD_REQUEST)
+            if target_user in current_user.friends.all():
+                return Response({'detail': 'Вы уже в друзьях'},
+                                status=status.HTTP_400_BAD_REQUEST)
 
-        # Отписка
-        if current_user in target_user.followers.all():
-            target_user.followers.remove(current_user)
-            return Response({'detail': f'Пользователь {current_user} отписался от {target_user}'},
-                            status=status.HTTP_200_OK)
-        # Подписка
-        else:
-            target_user.followers.add(current_user)
-            return Response({'detail': f'Пользователь {current_user} подписался на {target_user}'},
-                            status=status.HTTP_200_OK)
+            if current_user in target_user.followers.all() or current_user in target_user.friend_requests.all():
+                target_user.followers.remove(current_user)
+                return Response({'detail': 'Вы уже отправляли заявку'}, status=status.HTTP_200_OK)
+
+            # Если пользователь уже отправлял нам заявку => мы его добавляем в друзья
+            if target_user in current_user.followers.all() or target_user in current_user.friend_requests.all():
+                current_user.followers.remove(target_user)
+                current_user.friends.add(target_user)
+                target_user.friends.add(current_user)
+                return Response({'detail': 'Пользователь вам уже отправлял запрос на дружбу. Вы добавили его в друзья'},
+                                status=status.HTTP_201_CREATED)
+            else:
+                target_user.friend_requests.add(current_user)
+                return Response({'detail': f'Вы отправили заявку на дружбу {target_user}'},
+                                status=status.HTTP_201_CREATED)
+
+        elif request.method == 'DELETE':
+            if target_user == current_user:
+                return Response({'detail': 'Нельзя удалить заявку себе'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            if target_user in current_user.friends.all():
+                return Response({'detail': 'Вы уже в друзьях'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            if current_user in target_user.friend_requests.all():
+                target_user.friend_requests.remove(current_user)
+                return Response({'detail': 'Ваша заявка была удалена'},
+                                status=status.HTTP_204_NO_CONTENT)
+
+            else:
+                return Response({'detail': 'Произошла ошибка'},
+                                status=status.HTTP_400_BAD_REQUEST)
