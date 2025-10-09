@@ -67,6 +67,23 @@ class PostViewSet(ModelViewSet):
         return Response({'detail': 'Лайк убран'}, status.HTTP_204_NO_CONTENT)
 
 
+class PostFeedViewSet(ReadOnlyModelViewSet):
+    serializer_class = PostSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+
+        friends = user.friends.all()
+        following = user.following.all()
+
+        visible_users = friends.union(following)
+        visible_users = visible_users.union([user])
+
+        return Post.objects.filter(owner__in=visible_users).order_by('created_at').select_related(
+            'owner').prefetch_related('likes', 'comments__author')
+
+
 class UserCommentViewSet(ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = [permissions.IsAuthenticated]
