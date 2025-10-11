@@ -1,4 +1,4 @@
-# SimpleChat Server
+# Social-network
 
 Современный чат-сервер с социальными возможностями, построенный на Django с WebSocket поддержкой.
 
