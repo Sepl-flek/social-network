@@ -4,6 +4,7 @@ from django.db.models.signals import m2m_changed, post_save
 from django.dispatch import receiver
 from chat.models import Post, Comment, Message
 from notification.models import Notification
+from notification.tasks import send_email_notification
 
 User = get_user_model()
 
@@ -20,6 +21,11 @@ def create_like_notification(sender, instance, action, pk_set, **kwargs):
                     notification_type='like',
                     message=f'{sender_user.username} лайкнул ваш пост.'
                 )
+                send_email_notification.delay(
+                    subject='Вашу публикацию оценили',
+                    message=f'Пользователь {sender_user} оценил вашу публикацию',
+                    recipient_list=[instance.owner.email]
+                )
 
 
 @receiver(post_save, sender=Comment)
@@ -31,6 +37,11 @@ def create_comment_notification(sender, instance, created, **kwargs):
             notification_type='comment',
             message=f'{instance.author.username} прокомментировал ваш пост.'
         )
+    send_email_notification.delay(
+        subject='Ваш пост прокоментировали',
+        message=f'Ваш пост {instance.post.id} прокоментировал {instance.author.username}',
+        recipient_list=[instance.post.owner.email]
+    )
 
 
 @receiver(m2m_changed, sender=User.friend_requests.through)
@@ -44,6 +55,11 @@ def friend_request_signal(sender, instance, action, pk_set, **kwargs):
                 notification_type='friend_request',
                 message=f"{instance.username} отправил вам заявку в друзья."
             )
+            send_email_notification.delay(
+                subject='Вам пришла заявка в друзья',
+                message=f'Вам пришел запрос в друзья от: {instance.username}',
+                recipient_list=[recipient.email]
+            )
 
 
 @receiver(post_save, sender=Message)
@@ -52,6 +68,7 @@ def new_message_signal(sender, instance, created, **kwargs):
         room = instance.room
         sender_user = instance.author
         recipients = room.users.exclude(id=sender_user.id)
+        text = instance.text
 
         for user in recipients:
             Notification.objects.create(
@@ -59,4 +76,10 @@ def new_message_signal(sender, instance, created, **kwargs):
                 sender=sender_user,
                 notification_type='message',
                 message=f"{sender_user.username} отправил вам сообщение."
+            )
+
+            send_email_notification.delay(
+                subject='Вам пришло сообщение',
+                message=f'Вам пришло сообщение от {sender_user.username}: {text}',
+                recipient_list=[user.email]
             )

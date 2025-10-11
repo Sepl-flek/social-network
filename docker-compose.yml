@@ -6,6 +6,8 @@ services:
       - "8000:8000"
     volumes:
       - ./chatserver:/chatserver
+    env_file:
+      - .env
     environment:
       - DB_HOST=database
       - DB_NAME=dbname
@@ -30,3 +32,22 @@ services:
   redis:
     image: redis:7
     hostname: redis
+
+  worker:
+    build:
+      context: .
+    hostname: worker
+    entrypoint: celery
+    command: -A celery_app.app worker --loglevel=info
+    volumes:
+      - ./chatserver:/chatserver
+    links:
+      - redis
+    depends_on:
+      - redis
+      - database
+    environment:
+      - DB_HOST=database
+      - DB_NAME=dbname
+      - DB_USER=dbuser
+      - DB_PASS=pass
