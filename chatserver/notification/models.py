@@ -8,6 +8,7 @@ class Notification(models.Model):
         ('friend_request', 'Заявка в друзья'),
         ('comment', 'Комментарий'),
         ('message', 'Сообщение'),
+        ('community_join', 'Подписка на вашу группу'),
     ]
 
     recipient = models.ForeignKey(

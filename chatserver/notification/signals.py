@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models.signals import m2m_changed, post_save
 from django.dispatch import receiver
-from chat.models import Post, Comment, Message
+from chat.models import Post, Comment, Message, CommunityMembership
 from notification.models import Notification
 from notification.tasks import send_email_notification
 
@@ -83,3 +83,27 @@ def new_message_signal(sender, instance, created, **kwargs):
                 message=f'Вам пришло сообщение от {sender_user.username}: {text}',
                 recipient_list=[user.email]
             )
+
+
+@receiver(post_save, sender=CommunityMembership)
+def community_join_notification(sender, instance, created, **kwargs):
+    if created:
+        community = instance.community
+        new_member = instance.user
+        owner = community.owner
+
+        if new_member == owner:
+            return
+
+        Notification.objects.create(
+            recipient=owner,
+            sender=new_member,
+            notification_type='community_join',
+            message=f"{new_member.username} вступил в ваше сообщество '{community.name}'."
+        )
+
+        send_email_notification.delay(
+            subject='Новый участник в вашем сообществе',
+            message=f"Пользователь {new_member.username} вступил в ваше сообщество '{community.name}'.",
+            recipient_list=[owner.email]
+        )

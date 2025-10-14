@@ -8,8 +8,8 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from account.models import CustomUser
 from api.serializers import (RoomSerializer, MessageSerializer, PostSerializer, CommentSerializer, UserDetailSerializer,
-                             UserSimpleSerializer)
-from chat.models import Room, Message, Post, Comment
+                             UserSimpleSerializer, CommunitySerializer)
+from chat.models import Room, Message, Post, Comment, Community, CommunityMembership
 
 
 # views that related with api
@@ -90,6 +90,48 @@ class UserCommentViewSet(ModelViewSet):
 
     def get_queryset(self):
         Comment.objects.filter(Q(author=self.request.user)).select_related('author')
+
+
+class CommunityViewSet(ModelViewSet):
+    serializer_class = CommunitySerializer
+    queryset = Community.objects.all().select_related(
+        'owner').prefetch_related('members')
+
+    def perform_create(self, serializer):
+        community = serializer.save(owner=self.request.user)
+        CommunityMembership.objects.create(
+            user=self.request.user,
+            community=community,
+            role='admin'
+        )
+
+    @decorators.action(detail=True, methods=['post', 'delete'], permission_classes=[permissions.IsAuthenticated])
+    def follow(self, request, pk=None):
+        community = self.get_object()
+        current_user = request.user
+
+        if request.method == 'POST':
+            membership, created = CommunityMembership.objects.get_or_create(
+                user=current_user,
+                community=community,
+                defaults={'role': 'member'}
+            )
+
+            if created:
+                return Response({'detail': 'Вы вступили в сообщество'},
+                                status=status.HTTP_201_CREATED)
+            else:
+                return Response({'detail': 'Вы уже состоите в этой группе'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+        elif request.method == 'DELETE':
+            deleted, _ = CommunityMembership.objects.filter(user=current_user, community=community).delete()
+            if deleted:
+                return Response({'detail': 'Вы покинули сообщество.'},
+                                status=status.HTTP_204_NO_CONTENT)
+            else:
+                return Response({'detail': 'Вы не являетесь участником этого сообщества.'},
+                                status=status.HTTP_400_BAD_REQUEST)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

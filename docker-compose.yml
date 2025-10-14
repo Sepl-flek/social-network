@@ -36,6 +36,8 @@ services:
   worker:
     build:
       context: .
+    env_file:
+      - .env
     hostname: worker
     entrypoint: celery
     command: -A celery_app.app worker --loglevel=info

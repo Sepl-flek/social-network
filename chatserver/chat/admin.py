@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.admin import ModelAdmin
 
-from chat.models import Room, Message, Post, Comment
+from chat.models import Room, Message, Post, Comment, Community, CommunityMembership
 
 
 @admin.register(Room)
@@ -21,4 +21,14 @@ class PostsAdmin(ModelAdmin):
 
 @admin.register(Comment)
 class CommentsAdmin(ModelAdmin):
+    pass
+
+
+@admin.register(Community)
+class CommunityAdmin(ModelAdmin):
+    pass
+
+
+@admin.register(CommunityMembership)
+class CommunityMembershipAdmin(ModelAdmin):
     pass
