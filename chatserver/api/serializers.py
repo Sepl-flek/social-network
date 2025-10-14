@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
-from chat.models import Room, Message, Post, Comment
+from chat.models import Room, Message, Post, Comment, Community
 from account.models import CustomUser
 
 
@@ -64,3 +64,13 @@ class PostSerializer(ModelSerializer):
     class Meta:
         model = Post
         fields = ('id', 'text', 'owner', 'image', 'likes_count', 'likes', 'comments_count', 'comments', 'created_at',)
+
+
+class CommunitySerializer(ModelSerializer):
+    owner = UserSimpleSerializer(read_only=True)
+    members = UserSimpleSerializer(many=True)
+    members_count = serializers.IntegerField(source='members.count', read_only=True)
+
+    class Meta:
+        model = Community
+        fields = ('id', 'name', 'owner', 'members', 'members_count', 'created_at')
