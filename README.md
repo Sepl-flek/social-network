@@ -1,4 +1,4 @@
-# SimpleChat Server
+# Social-network
 
 Современный чат-сервер с социальными возможностями, построенный на Django с WebSocket поддержкой.
 
@@ -40,13 +40,13 @@
 
 1. **Клонируйте репозиторий:**
 ```bash
-git clone <repository-url>
-cd simpleChatServer
+git clone <https://github.com/Sepl-flek/social-networkl>
+cd social-network
 ```
 
 2. **Создайте файл переменных окружения:**
 ```bash
-cp .env.example .env
+touch .env
 ```
 
 3. **Настройте переменные в `.env`:**
