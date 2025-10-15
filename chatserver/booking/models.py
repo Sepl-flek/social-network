@@ -25,7 +25,7 @@ class Availability(models.Model):
 
 class Booking(models.Model):
     event_type = models.ForeignKey(EventType, on_delete=models.CASCADE, related_name="bookings")
-    guest = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="hosted_bookings")
+    guest = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="guested_bookings")
 
     date = models.DateField()
     start_time = models.TimeField()
@@ -33,7 +33,7 @@ class Booking(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ("host", "date", "start_time")
+        unique_together = ("guest", "date", "start_time")
 
     def __str__(self):
         return f"{self.guest_name} → {self.host} ({self.date} {self.start_time})"

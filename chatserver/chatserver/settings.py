@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'account',
     'api',
     'notification',
+    'booking',
 
     'django.contrib.admin',
     'django.contrib.auth',

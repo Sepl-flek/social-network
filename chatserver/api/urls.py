@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from rest_framework.routers import SimpleRouter
 
 from api.views import RoomsViewsSet, MessageListView, MyRoomListView, PostViewSet, UserViewSet, PostFeedViewSet, \
@@ -12,6 +12,8 @@ router.register(r'feed', PostFeedViewSet, basename='feed-post')
 router.register(r'communities', CommunityViewSet)
 
 urlpatterns = [path('rooms/<int:room_id>/messages/',  MessageListView.as_view(), name='room-message'),
-               path('rooms/user_room/', MyRoomListView.as_view(), name='user-rooms')]
+               path('rooms/user_room/', MyRoomListView.as_view(), name='user-rooms'),
+               path('booking/', include('booking.urls')),
+               ]
 
 urlpatterns += router.urls
