@@ -30,6 +30,7 @@ class BookingViewSet(ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
+        
         serializer.save(guest=self.request.user)
 
 

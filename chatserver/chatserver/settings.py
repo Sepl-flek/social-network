@@ -43,7 +43,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'rest_framework'
+    'rest_framework',
+    'django_celery_beat',
+
 ]
 
 MIDDLEWARE = [
@@ -86,6 +88,13 @@ CHANNEL_LAYERS = {
 
 CELERY_BROKER_URL = "redis://redis:6379/0"
 CELERY_RESULT_BACKEND = "redis://redis:6379/0"
+
+CELERY_BEAT_SCHEDULE = {
+    'send_booking_reminders': {
+        'task': 'booking.tasks.send_upcoming_booking_notifications',
+        'schedule': 60.0,
+    },
+}
 
 WSGI_APPLICATION = 'chatserver.wsgi.application'
 
@@ -174,4 +183,3 @@ EMAIL_HOST_PASSWORD = os.environ.get("GMAIL_HOST_PASSWORD")
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-

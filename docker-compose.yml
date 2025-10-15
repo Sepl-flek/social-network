@@ -52,4 +52,20 @@ services:
       - DB_HOST=database
       - DB_NAME=dbname
       - DB_USER=dbuser
-      - DB_PASS=pass
+      - DB_PASS=dbpass
+  beat:
+    build:
+      context: .
+    command: celery -A celery_app.app beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    volumes:
+      - ./chatserver:/chatserver
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - database
+    environment:
+      - DB_HOST=database
+      - DB_NAME=dbname
+      - DB_USER=dbuser
+      - DB_PASS=dbpass
