@@ -118,8 +118,8 @@ docker-compose exec web python manage.py createsuperuser
 ### Сообщества
 - `GET /api/communities/` - Список сообществ
 - `POST /api/communities/` - Создать сообщество
-- `POST /api/communities/{id}/like/` - Лайк поста
-- `DELETE /api/communities/{id}/like/` - Убрать лайк
+- `POST /api/communities/{id}/follow/` - Подписаться
+- `DELETE /api/communities/{id}/follow/` - Отписаться
 
   ### Посты
 - `GET /api/` - Список постов
