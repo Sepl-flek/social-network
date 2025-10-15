@@ -115,14 +115,14 @@ docker-compose exec web python manage.py createsuperuser
 - `GET /api/rooms/{id}/messages/` - Сообщения комнаты
 - `WS /ws/chat/{room_name}/` - WebSocket для чата
 
-### Посты
+### Сообщества
 - `GET /api/communities/` - Список сообществ
 - `POST /api/communities/` - Создать сообщество
 - `POST /api/communities/{id}/like/` - Лайк поста
 - `DELETE /api/communities/{id}/like/` - Убрать лайк
 
-  ### Сообщества
-- `GET /api//` - Список постов
+  ### Посты
+- `GET /api/` - Список постов
 - `POST /api/posts/` - Создать пост
 - `GET /api/feed/` - Лента новостей
 - `POST /api/posts/{id}/like/` - Лайк поста
