@@ -1,4 +1,4 @@
-from rest_framework import permissions
+from rest_framework import permissions, decorators
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from datetime import datetime
@@ -42,3 +42,4 @@ class EventTypeViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+

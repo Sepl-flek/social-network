@@ -2,6 +2,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models.signals import m2m_changed, post_save
 from django.dispatch import receiver
+
+from booking.models import Booking
 from chat.models import Post, Comment, Message, CommunityMembership
 from notification.models import Notification
 from notification.tasks import send_email_notification
@@ -105,5 +107,28 @@ def community_join_notification(sender, instance, created, **kwargs):
         send_email_notification.delay(
             subject='Новый участник в вашем сообществе',
             message=f"Пользователь {new_member.username} вступил в ваше сообщество '{community.name}'.",
+            recipient_list=[owner.email]
+        )
+
+
+@receiver(post_save, sender=Booking)
+def community_join_notification(sender, instance, created, **kwargs):
+    if created:
+        event_type = instance.event_type
+        guest = instance.guest
+        owner = event_type.owner
+        start_time = instance.start_time
+        date_time = instance.date
+
+        Notification.objects.create(
+            recipient=owner,
+            sender=guest,
+            notification_type='booking',
+            message=f'Пользователь {guest.username} забронировал созвон {event_type} {date_time} в {start_time}'
+        )
+
+        send_email_notification.delay(
+            subject='Новый участник в вашем сообществе',
+            message=f"Пользователь {guest.username} забронировал созвон {event_type} {date_time} в {start_time}",
             recipient_list=[owner.email]
         )

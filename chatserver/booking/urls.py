@@ -1,10 +1,10 @@
 from django.urls import path, include
 from rest_framework.routers import SimpleRouter
-from .views import BookingViewSet, available_slots
+from .views import BookingViewSet, available_slots, EventTypeViewSet
 
 router = SimpleRouter()
 router.register(r'bookings', BookingViewSet, basename='booking')
-router.register(r'event-type', BookingViewSet, basename='event-type')
+router.register(r'event-type', EventTypeViewSet, basename='event-type')
 
 urlpatterns = [
     # GET /api/booking/available-slots/<username>/<event_slug>/?date=2025-10-17
