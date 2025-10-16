@@ -128,7 +128,7 @@ def community_join_notification(sender, instance, created, **kwargs):
         )
 
         send_email_notification.delay(
-            subject='Новый участник в вашем сообществе',
+            subject='Пользователь забронировал ваше свободное место',
             message=f"Пользователь {guest.username} забронировал созвон {event_type} {date_time} в {start_time}",
             recipient_list=[owner.email]
         )
